@@ -1,0 +1,62 @@
+services:
+  # nginx
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: php:8.2-apache
+    platform: linux/amd64
+    ports:
+      - "80:80"
+    volumes:
+      - ./public:/var/www/html  # دایرکتوری public به Nginx متصل می‌شود
+      - ./php.ini:/usr/local/etc/php/conf.d/custom.ini
+    networks:
+      - app-network
+
+  # php
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: php:8.2-fpm
+    platform: linux/amd64
+    volumes:
+      - ./public:/var/www/html  # دایرکتوری public به PHP متصل می‌شود
+    networks:
+      - app-network
+
+  # mysql
+  db:
+    image: mysql:latest
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: my_database
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    platform: linux/amd64
+    ports:
+      - "3307:80"  # پورت phpMyAdmin
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root_password
+      UPLOAD_LIMIT: 300M
+    networks:
+      - app-network
+
+volumes:
+  db_data:
+
+networks:
+  app-network:
